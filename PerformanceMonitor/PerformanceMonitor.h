@@ -12,7 +12,7 @@
 
 + (instancetype)sharedInstance;
 
-- (void)start;
-- (void)stop;
+- (void)startMonitor;
+- (void)stopMonitor;
 
 @end
