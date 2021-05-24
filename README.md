@@ -134,7 +134,7 @@ static void runLoopObserverCallBack(CFRunLoopObserverRef observer, CFRunLoopActi
     CFRunLoopObserverRef observer = CFRunLoopObserverCreate(kCFAllocatorDefault,
                                                             kCFRunLoopAllActivities,
                                                             YES,
-                                                            0,
+                                                            NSUIntegerMax,
                                                             &runLoopObserverCallBack,
                                                             &context);
     CFRunLoopAddObserver(CFRunLoopGetMain(), observer, kCFRunLoopCommonModes);
