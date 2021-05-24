@@ -64,7 +64,7 @@ static void runLoopObserverCallBack(CFRunLoopObserverRef observer, CFRunLoopActi
     observer = CFRunLoopObserverCreate(kCFAllocatorDefault,
                                        kCFRunLoopAllActivities,
                                        YES,
-                                       0,
+                                       NSUIntegerMax,
                                        &runLoopObserverCallBack,
                                        &context);
     //将观察者添加到主线程runloop的common模式下的观察中
@@ -85,8 +85,9 @@ static void runLoopObserverCallBack(CFRunLoopObserverRef observer, CFRunLoopActi
                     activity = 0;
                     return;
                 }
+                
                 //两个runloop的状态，BeforeSources和AfterWaiting这两个状态区间时间能够检测到是否卡顿
-                if (activity==kCFRunLoopBeforeSources || activity==kCFRunLoopAfterWaiting)
+                if (activity == kCFRunLoopBeforeSources || activity == kCFRunLoopAfterWaiting)
                 {
                     if (++timeoutCount < 5)
                         continue;
