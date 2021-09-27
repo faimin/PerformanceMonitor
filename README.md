@@ -1,6 +1,6 @@
 # iOS 性能检测
 
-iOS开发中，如果是由于占用内存或者`cpu`过高导致性能下降，使用`Instruments`比较容易那些造成性能低下的”罪魁祸首”，在开发测试阶段它可以帮助我们分析软件运行的性能消耗，但是这可定是远远不够的，我们需要一个工具，可以在正式环境中由大量用户在使用过程中监控、分析到的数据更能解决一些隐藏的问题.
+iOS开发中，如果是由于占用内存或者`cpu`过高导致性能下降，使用`Instruments`比较容易那些造成性能低下的”罪魁祸首”，在开发测试阶段它可以帮助我们分析软件运行的性能消耗，但是这可定是远远不够的，我们需要一个工具，可以在正式环境中由大量用户在使用过程中监控、分析到的数据更能解决一些隐藏的问题。
 
 ### Time Profiler
 
@@ -55,10 +55,11 @@ iOS开发中，如果是由于占用内存或者`cpu`过高导致性能下降，
 
 ### 寻找卡顿的切入点
 
-> 监控卡顿,最直接就是找到主线程都在干些啥玩意儿.我们知道一个线程的消息事件处理都是依赖于NSRunLoop来驱动,所以要知道线程正在调用什么方法,就需要从`NSRunLoop`来入手.`CFRunLoop`的代码是开源,可以在此处查阅到源代码http://opensource.apple.com/source/CF/CF-1151.16/CFRunLoop.c,其中核心方法CFRunLoopRun简化后的主要逻辑大概是这样的:
+> 监控卡顿,最直接就是找到主线程都在干些啥玩意儿.我们知道一个线程的消息事件处理都是依赖于NSRunLoop来驱动,所以要知道线程正在调用什么方法,就需要从`NSRunLoop`来入手.`CFRunLoop`的代码是开源,可以在此处查阅到源代码 [https://github.com/apple/swift-corelibs-foundation/blob/main/CoreFoundation/RunLoop.subproj/CFRunLoop.c](https://github.com/apple/swift-corelibs-foundation/blob/main/CoreFoundation/RunLoop.subproj/CFRunLoop.c) , 其中核心方法CFRunLoopRun简化后的主要逻辑大概是这样的:
+
 <br />
 
-```
+```c++
 int32_t __CFRunLoopRun()
 {
     //通知即将进入runloop
@@ -108,6 +109,7 @@ int32_t __CFRunLoopRun()
     __CFRunLoopDoObservers(CFRunLoopExit);
 }
 ```
+
 <br />
 
 > 不难发现`NSRunLoop`调用方法主要就是在`kCFRunLoopBeforeSources`和`kCFRunLoopBeforeWaiting`之间,还有`kCFRunLoopAfterWaiting`之后,也就是如果我们发现这两个时间内耗时太长,那么就可以判定出此时主线程卡顿.
@@ -121,7 +123,7 @@ int32_t __CFRunLoopRun()
 
 <br />
 
-```
+```c++
 static void runLoopObserverCallBack(CFRunLoopObserverRef observer, CFRunLoopActivity activity, void *info)
 {
     MyClass *object = (__bridge MyClass*)info;
@@ -147,7 +149,7 @@ static void runLoopObserverCallBack(CFRunLoopObserverRef observer, CFRunLoopActi
 
 <br />
 
-```
+```c++
 static void runLoopObserverCallBack(CFRunLoopObserverRef observer, CFRunLoopActivity activity, void *info)
 {
     PerformanceMonitor *moniotr = (__bridge PerformanceMonitor*)info;
@@ -209,7 +211,9 @@ static void runLoopObserverCallBack(CFRunLoopObserverRef observer, CFRunLoopActi
                     NSLog(@"此处发生卡顿:---%@", report);
                 }//end activity
             }// end semaphore wait
+
             timeoutCount = 0;
+
         }// end while
     });
 }
@@ -223,7 +227,7 @@ static void runLoopObserverCallBack(CFRunLoopObserverRef observer, CFRunLoopActi
 
 <br />
 
-```
+```c++
 PLCrashReporterConfig *config = [[PLCrashReporterConfig alloc] initWithSignalHandlerType:PLCrashReporterSignalHandlerTypeBSD
                                                                    symbolicationStrategy:PLCrashReporterSymbolicationStrategyAll];
 PLCrashReporter *crashReporter = [[PLCrashReporter alloc] initWithConfiguration:config];
